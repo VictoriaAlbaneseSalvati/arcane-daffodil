@@ -25,7 +25,8 @@ add_executable(demo
 target_link_libraries(demo PUBLIC 
     rclcpp::rclcpp
     ${geometry_msgs_TARGETS}
-    ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library)
+    ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library
+    ${std_msgs_TARGETS})
 install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
 
 

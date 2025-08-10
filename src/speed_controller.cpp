@@ -22,13 +22,18 @@ using std::placeholders::_1;
 SpeedController::SpeedController()
 : Node("speed_controller")
 , min_laser_dist_meters(2.0)
+, is_estop_on(false)
 , speed_state(SpeedState::FULL_SPEED)
 {
     this->timer = this->create_wall_timer(
         std::chrono::milliseconds(500),
         std::bind(&SpeedController::publish_CommandVelocity, this));
     this->publisher = this->create_publisher<CommandVelocity>("robot/cmd_vel", 10);
-    this->subscription = this->create_subscription<LaserScan>(
+    this->estop_subscription = this->create_subscription<BoolMsg>(
+        "/estop", 
+        10, 
+        std::bind(&SpeedController::callback_EStop, this, _1));
+    this->laser_subscription = this->create_subscription<LaserScan>(
         "/robot/base_scan", 
         10, 
         std::bind(&SpeedController::callback_LaserScan, this, _1));
@@ -36,10 +41,11 @@ SpeedController::SpeedController()
 
 
 /**
- * @brief Determine what the speed state should be based on the 
- *        min_laser_dist_meters member and the rules defined by the 
- *        constants in the speed controller and set the speed_state 
- *        member accordingly. 
+ * @brief Determine what the speed state should be based on:
+ *          (1) the estop reading - if that is on, SpeedState is STOP
+ *          (2) the min_laser_dist_meters reading - determine the proper
+ *              speed state based on the constants defined in this class
+ *        and then set the speed_state class member accordingly.
  *
  * @note I took "within x" to mean < x and not <= x, but if that 
  *       assumption was incorrect all that would need to be done is 
@@ -48,22 +54,30 @@ SpeedController::SpeedController()
 void 
 SpeedController::determine_speed_state() 
 {
-    if (this->min_laser_dist_meters < this->TOO_CLOSE_LASER_DIST_METERS) 
+    if (this->is_estop_on) 
     {
         this->speed_state = SpeedState::STOP;
     }
-    else if (this->min_laser_dist_meters < this->CLOSE_LASER_DIST_METERS) 
+    else 
     {
-        this->speed_state = SpeedState::SLOW;
-    }
-    else
-    {
-        this->speed_state = SpeedState::FULL_SPEED;
+        if (this->min_laser_dist_meters < this->TOO_CLOSE_LASER_DIST_METERS) 
+        {
+            this->speed_state = SpeedState::STOP;
+        }
+        else if (this->min_laser_dist_meters < this->CLOSE_LASER_DIST_METERS) 
+        {
+            this->speed_state = SpeedState::SLOW;
+        }
+        else
+        {
+            this->speed_state = SpeedState::FULL_SPEED;
+        }
     }
 
     RCLCPP_INFO(
         this->get_logger(), 
-        "Min Laser Dist: %.2f meters - Speed State: %s", 
+        "E-Stop: %-3s - Min Laser Dist: %.2f meters - Speed State: %s", 
+        this->is_estop_on ? "ON" : "OFF",
         this->min_laser_dist_meters,
         this->speed_state_to_str[this->speed_state].c_str());
 }
@@ -98,11 +112,22 @@ SpeedController::publish_CommandVelocity()
 
 
 /**
- * @brief This function listens to the LaserScan information from the
- *        DummyProximitySensor, picks out the smallest reading in the list
- *        of ranges and sets that value to be the min_laser_dist_meters, 
- *        a class member which then helps to determine the speed state.
- * @param msg - the LaserScan message we are receiving from the subscription
+ * @brief This function listens to the /estop topic and sets the is_estop_on
+ *        class member to that value value.
+ * @param msg - the bool message from the /estop topic
+ */
+void 
+SpeedController::callback_EStop(const BoolMsg& msg) 
+{
+    this->is_estop_on = msg.data;
+}
+
+
+/**
+ * @brief This function listens to the /robot/base_scan topic, picks out
+ *        the smallest reading in the list of ranges and then sets the
+ *        min_laser_dist_meters class member to that value. 
+ * @param msg - the LaserScan message from the /robot/base_scan topic
  */
 void 
 SpeedController::callback_LaserScan(const LaserScan& msg)
