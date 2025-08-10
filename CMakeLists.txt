@@ -27,4 +27,10 @@ target_link_libraries(demo PUBLIC
     ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library)
 install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
 
+
+add_executable(keyboard_demo 
+    src/keyboard_input_processor_demo.cpp
+    src/keyboard_input_processor.cpp)
+install(TARGETS keyboard_demo DESTINATION lib/${PROJECT_NAME})
+
 ament_package()
