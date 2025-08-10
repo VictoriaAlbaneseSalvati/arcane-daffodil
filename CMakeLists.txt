@@ -18,6 +18,7 @@ include_directories(include)
 
 add_executable(demo
     src/main.cpp
+    src/speed_controller.cpp
     src/proximity_sensor_dummy.cpp)
 target_link_libraries(demo PUBLIC 
     rclcpp::rclcpp
