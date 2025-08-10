@@ -14,6 +14,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 include_directories(include)
 
@@ -26,6 +27,16 @@ target_link_libraries(demo PUBLIC
     ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library)
 install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
+
+
+add_executable(run_estop 
+    src/run_estop.cpp
+    src/estop.cpp
+    src/keyboard_input_processor.cpp)
+target_link_libraries(run_estop PUBLIC 
+    rclcpp::rclcpp
+    ${std_msgs_TARGETS})
+install(TARGETS run_estop DESTINATION lib/${PROJECT_NAME})
 
 
 add_executable(keyboard_demo 

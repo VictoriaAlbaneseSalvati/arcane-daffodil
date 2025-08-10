@@ -27,6 +27,7 @@ public:
     ~KeyboardInputProcessor();
     
     char get_last_clicked_key();
+    void restore_terminal_settings();
 
 private:
 
@@ -34,7 +35,6 @@ private:
     struct termios terminal_settings;
 
     void save_terminal_settings();
-    void restore_terminal_settings();
     void setup_terminal_for_input();
 };
 
