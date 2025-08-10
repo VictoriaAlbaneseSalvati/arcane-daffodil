@@ -12,6 +12,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 include_directories(include)
@@ -22,6 +23,7 @@ add_executable(demo
     src/proximity_sensor_dummy.cpp)
 target_link_libraries(demo PUBLIC 
     rclcpp::rclcpp
+    ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library)
 install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
 
