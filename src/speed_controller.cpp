@@ -14,17 +14,32 @@
 
 using std::placeholders::_1;
 
+std::unordered_map<SpeedState, std::string> speed_state_to_str = {
+    { SpeedState::FULL_SPEED, "FULL_SPEED" },
+    { SpeedState::SLOW, "SLOW" },
+    { SpeedState::STOP, "STOP" },
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief Constructs an instance of the SpeedController class
+ * @brief Constructs an instance of the SpeedController class 
+ *        with the given arguments
+ * @param silence_logging - whether or not to print log statements
+ * @param is_estop_on - whether or not the estop is on
+ * @param min_laser_dist_meters - the min laser reading in meters
  */
-SpeedController::SpeedController()
+SpeedController::SpeedController(
+    const bool& silence_logging,
+    const bool& is_estop_on,
+    const float& min_laser_dist_meters)
 : Node("speed_controller")
-, min_laser_dist_meters(2.0)
-, is_estop_on(false)
-, speed_state(SpeedState::FULL_SPEED)
+, min_laser_dist_meters(min_laser_dist_meters)
+, is_estop_on(is_estop_on)
 {
+    this->silence_logging = silence_logging;
+    this->determine_speed_state();
+
     this->timer = this->create_wall_timer(
         std::chrono::milliseconds(500),
         std::bind(&SpeedController::publish_CommandVelocity, this));
@@ -37,6 +52,52 @@ SpeedController::SpeedController()
         "/robot/base_scan", 
         10, 
         std::bind(&SpeedController::callback_LaserScan, this, _1));
+}
+
+
+/**
+ * @brief Setter & getter for is_estop_on class member
+ */    
+bool 
+SpeedController::get_is_estop_on() const 
+{ 
+    return this->is_estop_on; 
+}
+void 
+SpeedController::set_is_estop_on(const bool& new_is_estop_on) 
+{ 
+    this->is_estop_on = new_is_estop_on;
+}
+
+ 
+/**
+ * @brief Setter & getter for min_laser_dist_meters class member
+ */    
+float 
+SpeedController::get_min_laser_dist_meters() const 
+{ 
+    return this->min_laser_dist_meters;
+}
+void 
+SpeedController::set_min_laser_dist_meters(
+    const float& new_min_laser_dist_meters) 
+{ 
+    this->min_laser_dist_meters = new_min_laser_dist_meters; 
+}
+
+ 
+/**
+ * @brief Setter & getter for is_estop_on class member
+ */    
+SpeedState
+SpeedController::get_speed_state() const 
+{ 
+    return this->speed_state; 
+}
+void 
+SpeedController::set_speed_state(const SpeedState& new_speed_state) 
+{ 
+    this->speed_state = new_speed_state; 
 }
 
 
@@ -54,31 +115,34 @@ SpeedController::SpeedController()
 void 
 SpeedController::determine_speed_state() 
 {
-    if (this->is_estop_on) 
+    if (this->get_is_estop_on()) 
     {
-        this->speed_state = SpeedState::STOP;
+        this->set_speed_state(SpeedState::STOP);
     }
     else 
     {
-        if (this->min_laser_dist_meters < this->TOO_CLOSE_LASER_DIST_METERS) 
+        if (this->get_min_laser_dist_meters() < this->TOO_CLOSE_LASER_DIST_METERS) 
         {
-            this->speed_state = SpeedState::STOP;
+            this->set_speed_state(SpeedState::STOP);
         }
-        else if (this->min_laser_dist_meters < this->CLOSE_LASER_DIST_METERS) 
+        else if (this->get_min_laser_dist_meters() < this->CLOSE_LASER_DIST_METERS) 
         {
-            this->speed_state = SpeedState::SLOW;
+            this->set_speed_state(SpeedState::SLOW);
         }
         else
         {
-            this->speed_state = SpeedState::FULL_SPEED;
+            this->set_speed_state(SpeedState::FULL_SPEED);
         }
     }
 
-    RCLCPP_INFO(
-        this->get_logger(), 
-        "E-Stop: %-3s - Speed State: %s", 
-        this->is_estop_on ? "ON" : "OFF",
-        this->speed_state_to_str[this->speed_state].c_str());
+    if (!this->silence_logging) 
+    {
+        RCLCPP_INFO(
+            this->get_logger(), 
+            "E-Stop: %-3s - Speed State: %s", 
+            this->get_is_estop_on() ? "ON" : "OFF",
+            speed_state_to_str[this->get_speed_state()].c_str());
+    }
 }
 
 
@@ -93,7 +157,7 @@ SpeedController::publish_CommandVelocity()
     this->determine_speed_state();
 
     CommandVelocity velocity;
-    switch(this->speed_state) 
+    switch(this->get_speed_state()) 
     {
         case SpeedState::STOP:
             velocity.linear.x = this->STOP_SPEED_MPS;
@@ -118,7 +182,7 @@ SpeedController::publish_CommandVelocity()
 void 
 SpeedController::callback_EStop(const BoolMsg& msg) 
 {
-    this->is_estop_on = msg.data;
+    this->set_is_estop_on(msg.data);
 }
 
 
@@ -138,11 +202,14 @@ SpeedController::callback_LaserScan(const LaserScan& msg)
 
     if (it != laser_ranges.end()) 
     {
-        this->min_laser_dist_meters = *it;
+        this->set_min_laser_dist_meters(*it);
     }
     else 
     {
-        RCLCPP_INFO(this->get_logger(), "LaserScan ranges list is empty");
+        if (!this->silence_logging)
+        { 
+            RCLCPP_INFO(this->get_logger(), "LaserScan ranges list is empty");
+        }
     }
 }
 

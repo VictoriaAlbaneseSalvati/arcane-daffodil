@@ -22,6 +22,13 @@ using BoolMsg = std_msgs::msg::Bool;
 using CommandVelocity = geometry_msgs::msg::Twist;
 using LaserScan = sensor_msgs::msg::LaserScan;
 
+enum SpeedState 
+{
+    FULL_SPEED,
+    SLOW,
+    STOP
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -41,20 +48,22 @@ class SpeedController : public rclcpp::Node
 {
 public:
 
-    SpeedController();
+    SpeedController(
+        const bool& silence_logging = false,
+        const bool& is_estop_on = false,
+        const float& min_laser_dist_meters = 2.0);
 
-    enum SpeedState 
-    {
-        FULL_SPEED,
-        SLOW,
-        STOP
-    };
-    std::unordered_map<SpeedState, std::string> speed_state_to_str = {
-        { SpeedState::FULL_SPEED, "FULL_SPEED" },
-        { SpeedState::SLOW, "SLOW" },
-        { SpeedState::STOP, "STOP" },
-    };
+    bool silence_logging;
+ 
+    bool get_is_estop_on() const ;
+    void set_is_estop_on(const bool& new_is_estop_on);
     
+    float get_min_laser_dist_meters() const; 
+    void set_min_laser_dist_meters(const float& new_min_laser_dist_meters); 
+
+    SpeedState get_speed_state() const; 
+    void set_speed_state(const SpeedState& new_speed_state); 
+   
 private:
 
     rclcpp::TimerBase::SharedPtr timer;
