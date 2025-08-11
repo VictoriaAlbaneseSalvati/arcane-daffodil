@@ -18,15 +18,15 @@ find_package(std_msgs REQUIRED)
 
 include_directories(include)
 
-add_executable(demo
-    src/main.cpp
+add_executable(run_speed_controller
+    src/run_speed_controller.cpp
     src/speed_controller.cpp)
-target_link_libraries(demo PUBLIC 
+target_link_libraries(run_speed_controller PUBLIC 
     rclcpp::rclcpp
     ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library
     ${std_msgs_TARGETS})
-install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
+install(TARGETS run_speed_controller DESTINATION lib/${PROJECT_NAME})
 
 
 add_executable(run_proximity_sensor 
