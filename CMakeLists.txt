@@ -30,7 +30,9 @@ install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
 
 
 add_executable(run_proximity_sensor 
-    src/run_proximity_sensor_keyboard.cpp
+    src/run_proximity_sensor.cpp
+    src/proximity_sensor_base.cpp
+    src/proximity_sensor_dummy.cpp
     src/proximity_sensor_keyboard.cpp
     src/keyboard_input_processor.cpp)
 target_link_libraries(run_proximity_sensor PUBLIC 

@@ -17,13 +17,9 @@
  * @brief Constructs an instance of the DummyProximitySensor class
  */
 DummyProximitySensor::DummyProximitySensor()
-: Node("proximity_sensor_dummy")
+: ProximitySensor()
 , count(0)
 {
-    this->timer = this->create_wall_timer(
-        std::chrono::milliseconds((int)(this->SCAN_TIME_SEC * 1000)),
-        std::bind(&DummyProximitySensor::publish_LaserScan, this));
-    this->publisher = this->create_publisher<LaserScan>("robot/base_scan", 10);
     this->laser_range_pattern = this->init_dummy_laser_range_pattern();
 }
 
@@ -42,11 +38,11 @@ DummyProximitySensor::init_dummy_laser_range_pattern()
     std::vector<float> dummy_pattern;
     for (int i = 20; i > 0; i--) 
     {
-        dummy_pattern.push_back(i / 10.0);
+        dummy_pattern.push_back((i / 10.0) + this->EPSILON);
     }
     for (int i = 1; i <= 20; i++) 
     {
-        dummy_pattern.push_back(i / 10.0);
+        dummy_pattern.push_back((i / 10.0) + this->EPSILON);
     }
     return dummy_pattern;    
 } 
@@ -58,17 +54,9 @@ DummyProximitySensor::init_dummy_laser_range_pattern()
  * @returns an initialized dummy LaserScan message 
  */
 LaserScan
-DummyProximitySensor::init_dummy_LaserScan()
+DummyProximitySensor::init_LaserScan()
 {
-    LaserScan laser_scan;
-    laser_scan.angle_min = this->ANGLE_MIN_RAD;
-    laser_scan.angle_max = this->ANGLE_MAX_RAD;
-    laser_scan.angle_increment = this->ANGLE_INCREMENT_RAD; 
-    laser_scan.time_increment = this->TIME_INCREMENT_SEC;
-    laser_scan.scan_time = this->SCAN_TIME_SEC;
-    laser_scan.range_min = this->RANGE_MIN_METERS;
-    laser_scan.range_max = this->RANGE_MAX_METERS;
-    laser_scan.ranges.resize(this->NUM_BEAMS);        
+    LaserScan laser_scan = this->init_LaserScan_params();
     
     // We are going to fill the ranges with uniform values for simplicity
     // Each value is going to be determined by the count modulo the size of 
@@ -83,17 +71,6 @@ DummyProximitySensor::init_dummy_LaserScan()
     this->count++;
    
     return laser_scan;
-}
-
-
-/**
- * @brief Creates and publishes dummy LaserScan messages
- */
-void 
-DummyProximitySensor::publish_LaserScan()
-{
-    LaserScan laser_scan = this->init_dummy_LaserScan();
-    this->publisher->publish(laser_scan);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -12,28 +12,16 @@
 
 #include "proximity_sensor_keyboard.hpp"
 
-// This will be added to the laser ranges that are being manually set, 
-// and which are meant to be even increments of 0.1; however, because of
-// floating point precision, sometimes the values are slightly less than
-// the value they are meant to be, which can make the visualization 
-// misleading since that has exact values.  So it's better to have the
-// laserscan values be slightly bigger than the exact value that smaller.
-#define EPSILON 0.000001
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Constructs an instance of the KeyboardProximitySensor class
  */
 KeyboardProximitySensor::KeyboardProximitySensor()
-: Node("proximity_sensor_keyboard")
+: ProximitySensor()
 , keyboard_input_processor(STARTUP_MESSAGE)
 , last_sensor_value(2.0 + EPSILON)
 {
-    this->timer = this->create_wall_timer(
-        std::chrono::milliseconds(100),
-        std::bind(&KeyboardProximitySensor::publish_LaserScan, this));
-    this->publisher = this->create_publisher<LaserScan>("robot/base_scan", 10);
     std::cout << this->make_ascii_laser();
 }
 
@@ -81,20 +69,12 @@ KeyboardProximitySensor::make_ascii_laser()
  * @brief Creates a dummy LaserScan message with values in accordance with
  *        this sensor, as defined in the header file.  The scan values are 
  *        determined by user keyboard inputs.
- * @returns an initialized dummy LaserScan message 
+ * @returns a fully initialized LaserScan message 
  */
 LaserScan
-KeyboardProximitySensor::init_keyboard_LaserScan()
+KeyboardProximitySensor::init_LaserScan()
 {
-    LaserScan laser_scan;
-    laser_scan.angle_min = this->ANGLE_MIN_RAD;
-    laser_scan.angle_max = this->ANGLE_MAX_RAD;
-    laser_scan.angle_increment = this->ANGLE_INCREMENT_RAD; 
-    laser_scan.time_increment = this->TIME_INCREMENT_SEC;
-    laser_scan.scan_time = this->SCAN_TIME_SEC;
-    laser_scan.range_min = this->RANGE_MIN_METERS;
-    laser_scan.range_max = this->RANGE_MAX_METERS;
-    laser_scan.ranges.resize(this->NUM_BEAMS);        
+    LaserScan laser_scan = this->init_LaserScan_params();
 
     char key = this->keyboard_input_processor.get_last_clicked_key();
     switch(key) 
@@ -102,13 +82,13 @@ KeyboardProximitySensor::init_keyboard_LaserScan()
         case '>':
             this->last_sensor_value = std::min(
                 this->RANGE_MAX_METERS, 
-                static_cast<float>(this->last_sensor_value + 0.1 + EPSILON));
+                static_cast<float>(this->last_sensor_value + 0.1 + this->EPSILON));
                 std::cout << this->make_ascii_laser();
             break;
         case '<':
             this->last_sensor_value = std::max(
                 this->RANGE_MIN_METERS,
-                static_cast<float>(this->last_sensor_value - 0.1 + EPSILON));
+                static_cast<float>(this->last_sensor_value - 0.1 + this->EPSILON));
                 std::cout << this->make_ascii_laser();
             break;
         case 'Q':
@@ -128,17 +108,6 @@ KeyboardProximitySensor::init_keyboard_LaserScan()
     }
    
     return laser_scan;
-}
-
-
-/**
- * @brief Creates and publishes dummy LaserScan messages
- */
-void 
-KeyboardProximitySensor::publish_LaserScan() 
-{
-    LaserScan laser_scan = this->init_keyboard_LaserScan();
-    this->publisher->publish(laser_scan);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

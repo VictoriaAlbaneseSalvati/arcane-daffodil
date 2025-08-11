@@ -2,7 +2,7 @@
 // 
 // Programmer: Victoria Salvati
 // Date: August 10, 2025
-// Filename: run_proximity_sensor_keyboard.cpp
+// Filename: run_proximity_sensor.cpp
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,6 +10,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
+#include "proximity_sensor_dummy.hpp"
 #include "proximity_sensor_keyboard.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,6 +18,7 @@
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
+    //rclcpp::spin(std::make_shared<DummyProximitySensor>());
     rclcpp::spin(std::make_shared<KeyboardProximitySensor>());
     rclcpp::shutdown();
     return 0;
