@@ -20,14 +20,23 @@ include_directories(include)
 
 add_executable(demo
     src/main.cpp
-    src/speed_controller.cpp
-    src/proximity_sensor_dummy.cpp)
+    src/speed_controller.cpp)
 target_link_libraries(demo PUBLIC 
     rclcpp::rclcpp
     ${geometry_msgs_TARGETS}
     ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library
     ${std_msgs_TARGETS})
 install(TARGETS demo DESTINATION lib/${PROJECT_NAME})
+
+
+add_executable(run_proximity_sensor 
+    src/run_proximity_sensor_keyboard.cpp
+    src/proximity_sensor_keyboard.cpp
+    src/keyboard_input_processor.cpp)
+target_link_libraries(run_proximity_sensor PUBLIC 
+    rclcpp::rclcpp
+    ${sensor_msgs_TARGETS} sensor_msgs::sensor_msgs_library)
+install(TARGETS run_proximity_sensor DESTINATION lib/${PROJECT_NAME})
 
 
 add_executable(run_estop 

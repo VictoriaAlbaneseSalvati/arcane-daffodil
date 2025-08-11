@@ -76,9 +76,8 @@ SpeedController::determine_speed_state()
 
     RCLCPP_INFO(
         this->get_logger(), 
-        "E-Stop: %-3s - Min Laser Dist: %.2f meters - Speed State: %s", 
+        "E-Stop: %-3s - Speed State: %s", 
         this->is_estop_on ? "ON" : "OFF",
-        this->min_laser_dist_meters,
         this->speed_state_to_str[this->speed_state].c_str());
 }
 

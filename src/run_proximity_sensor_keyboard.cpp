@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // Programmer: Victoria Salvati
-// Date: August 9, 2025
-// Filename: main.cpp
+// Date: August 10, 2025
+// Filename: run_proximity_sensor_keyboard.cpp
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,14 +10,14 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "speed_controller.hpp"
+#include "proximity_sensor_keyboard.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<SpeedController>());
+    rclcpp::spin(std::make_shared<KeyboardProximitySensor>());
     rclcpp::shutdown();
     return 0;
 }
